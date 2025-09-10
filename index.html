@@ -4,12 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aplikasi Kisi-Kisi Soal (Simpan Otomatis)</title>
+
+    <!-- Tailwind + jsPDF + autoTable -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
     <style>
       body {
         font-family: "Inter", sans-serif;
@@ -34,12 +38,17 @@
       #saveStatus {
         transition: opacity 0.5s ease-in-out;
       }
+      .dragging {
+        opacity: 0.5;
+        background: #fef3c7;
+      }
     </style>
   </head>
+
   <body class="bg-gray-100">
     <div class="container mx-auto p-4 md:p-8">
       <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
-        <!-- Bagian Header -->
+        <!-- Header -->
         <div class="text-center mb-8">
           <h1 class="text-2xl font-bold uppercase text-gray-800">Kisi-Kisi Soal</h1>
           <input
@@ -109,10 +118,11 @@
               </tr>
             </thead>
             <tbody id="tableBody">
-              <!-- Rows will be dynamically added here -->
+              <!-- Rows dynamically added -->
             </tbody>
           </table>
         </div>
+
         <p class="text-xs text-gray-400 mt-4 no-print">ID Dokumen (untuk kolaborasi): <span id="docId" class="font-mono bg-gray-200 px-1 rounded"></span></p>
 
         <!-- Bagian Tanda Tangan -->
@@ -122,15 +132,14 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-            <!-- Kolom Kiri: Kepala Sekolah -->
             <div>
               <div class="mb-4">
                 <label for="namaKepsek" class="block text-sm font-medium text-gray-600">Nama Kepala Sekolah</label>
-                <input type="text" id="namaKepsek" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Nama Lengkap Kepala Sekolah" />
+                <input type="text" id="namaKepsek" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" placeholder="Nama Lengkap Kepala Sekolah" />
               </div>
               <div class="mb-4">
                 <label for="nipKepsek" class="block text-sm font-medium text-gray-600">NIP Kepala Sekolah</label>
-                <input type="text" id="nipKepsek" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="NIP/NIK Kepala Sekolah" />
+                <input type="text" id="nipKepsek" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" placeholder="NIP/NIK Kepala Sekolah" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-600">Tanda Tangan Kepala Sekolah</label>
@@ -141,19 +150,19 @@
                 </div>
               </div>
             </div>
-            <!-- Kolom Kanan: Penyusun -->
+
             <div>
               <div class="mb-4">
                 <label for="kotaTanggal" class="block text-sm font-medium text-gray-600">Kota & Tanggal</label>
-                <input type="text" id="kotaTanggal" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Contoh: Sidoarjo, 10 September 2025" />
+                <input type="text" id="kotaTanggal" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" placeholder="Contoh: Sidoarjo, 10 September 2025" />
               </div>
               <div class="mb-4">
                 <label for="namaPenyusun" class="block text-sm font-medium text-gray-600">Nama Penyusun</label>
-                <input type="text" id="namaPenyusun" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Nama Guru Penyusun" />
+                <input type="text" id="namaPenyusun" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" placeholder="Nama Guru Penyusun" />
               </div>
               <div class="mb-4">
                 <label for="nipPenyusun" class="block text-sm font-medium text-gray-600">NIP Penyusun</label>
-                <input type="text" id="nipPenyusun" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="NIP/NIK Penyusun" />
+                <input type="text" id="nipPenyusun" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" placeholder="NIP/NIK Penyusun" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-600">Tanda Tangan Penyusun</label>
@@ -175,30 +184,30 @@
       import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
       import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-      // --- KONFIGURASI FIREBASE ---
+      // --- KONFIGURASI FIREBASE (demo fallback untuk lokal) ---
       const firebaseConfig = typeof __firebase_config !== "undefined" ? JSON.parse(__firebase_config) : { apiKey: "DEMO_KEY", authDomain: "DEMO.firebaseapp.com", projectId: "DEMO_PROJECT_ID" };
       const appId = typeof __app_id !== "undefined" ? __app_id : "kisi-kisi-soal-default";
       const docId = `kisi-kisi-data-${appId}`;
       document.getElementById("docId").textContent = docId;
 
-      // --- INISIALISASI ---
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getFirestore(app);
       const kisiKisiRef = doc(db, "artifacts", appId, "public", "data", "kisi-kisi-sheets", docId);
 
+      // Elemen & state
       const tableBody = document.getElementById("tableBody");
       const saveStatus = document.getElementById("saveStatus");
-
-      let isDataLoaded = false;
       let debounceTimer;
       let kopImageData = null;
       let ttdPenyusunData = null;
       let ttdKepsekData = null;
+      let isDataLoaded = false;
 
-      // --- Fungsi memuat gambar jadi base64 ---
+      // --- MEMUAT GAMBAR jadi base64 (mendukung Blob atau URL) ---
       const loadImageData = (source) => {
         return new Promise((resolve) => {
+          // Blob (file upload / fetch blob)
           if (source instanceof Blob) {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -209,12 +218,34 @@
             };
             reader.onerror = () => resolve(null);
             reader.readAsDataURL(source);
-          } else {
-            resolve(null);
+            return;
           }
+          // URL / base64 string
+          if (typeof source === "string") {
+            const img = new Image();
+            img.crossOrigin = "Anonymous"; // coba dapatkan cross-origin jika memungkinkan
+            img.onload = () => {
+              const canvas = document.createElement("canvas");
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(img, 0, 0);
+              try {
+                const base64 = canvas.toDataURL("image/png");
+                resolve({ base64, width: img.width, height: img.height });
+              } catch (err) {
+                resolve(null);
+              }
+            };
+            img.onerror = () => resolve(null);
+            img.src = source;
+            return;
+          }
+          resolve(null);
         });
       };
 
+      // --- File upload tanda tangan ---
       const handleFileUpload = async (file, target, previewElementId) => {
         if (!file) return;
         const imageData = await loadImageData(file);
@@ -225,11 +256,14 @@
           const preview = document.getElementById(previewElementId);
           preview.src = imageData.base64;
           preview.style.display = "block";
-
           debouncedSaveData();
         }
       };
 
+      document.getElementById("ttdPenyusunInput").addEventListener("change", (e) => handleFileUpload(e.target.files[0], "penyusun", "ttdPenyusunPreview"));
+      document.getElementById("ttdKepsekInput").addEventListener("change", (e) => handleFileUpload(e.target.files[0], "kepsek", "ttdKepsekPreview"));
+
+      // --- Debounce & Save ---
       const debounce = (func, delay) => {
         return function (...args) {
           clearTimeout(debounceTimer);
@@ -244,17 +278,30 @@
       const collectData = () => {
         const rows = [];
         tableBody.querySelectorAll("tr").forEach((tr) => {
+          // Ambil level kognitif (td 6) dan bentuk soal (td 7) + custom jika ada
+          const levelKognitif = Array.from(tr.querySelectorAll("td:nth-child(6) input[type='checkbox']:checked")).map((cb) => cb.value);
+          const bentukChecked = Array.from(tr.querySelectorAll("td:nth-child(7) input[type='checkbox']:checked"));
+          const bentukSoal = bentukChecked.map((cb) => {
+            if (cb.classList.contains("bentuk-custom-checkbox")) {
+              const txt = tr.querySelector(".bentuk-custom-text");
+              return txt ? txt.value.trim() || "Lainnya" : "Lainnya";
+            }
+            return cb.value;
+          });
+
           const rowData = {
             cp: tr.querySelector("td:nth-child(2) textarea").value,
             tp: tr.querySelector("td:nth-child(3) textarea").value,
             materi: tr.querySelector("td:nth-child(4) textarea").value,
             indikator: tr.querySelector("td:nth-child(5) textarea").value,
-            levelKognitif: Array.from(tr.querySelectorAll("td:nth-child(6) input:checked")).map((cb) => cb.value),
-            bentukSoal: Array.from(tr.querySelectorAll("td:nth-child(7) input:checked")).map((cb) => cb.value),
+            levelKognitif,
+            bentukSoal,
+            customSoal: tr.querySelector(".bentuk-custom-text") ? tr.querySelector(".bentuk-custom-text").value : "",
             nomorSoal: tr.querySelector("td:nth-child(8) input").value,
           };
           rows.push(rowData);
         });
+
         return {
           assessmentType: document.getElementById("assessmentType").value,
           academicYear: document.getElementById("academicYear").value,
@@ -270,12 +317,12 @@
           nipKepsek: document.getElementById("nipKepsek").value,
           ttdPenyusun: ttdPenyusunData,
           ttdKepsek: ttdKepsekData,
-          rows: rows,
+          rows,
         };
       };
 
       const saveData = async () => {
-        if (!auth.currentUser) return;
+        if (!auth.currentUser) return; // hanya simpan bila terautentikasi
         const data = collectData();
         try {
           await setDoc(kisiKisiRef, data, { merge: true });
@@ -287,6 +334,7 @@
 
       const debouncedSaveData = debounce(saveData, 1500);
 
+      // --- Render data dari Firestore ke tampilan ---
       const renderData = (data) => {
         const d = data || {};
         document.getElementById("assessmentType").value = d.assessmentType || "Asesmen Sumatif Tengah Semester 1";
@@ -315,36 +363,48 @@
           preview.style.display = "block";
         }
 
+        // Isi tabel
         tableBody.innerHTML = "";
         if (d.rows && d.rows.length > 0) {
           d.rows.forEach((rowData) => addRow(false, rowData));
         } else {
-          addRow(false);
+          addRow(false); // satu baris kosong default
         }
         updateRowNumbers();
-        addEventListenersToInputs();
       };
 
+      // --- Menambah baris --- (termasuk opsi level (6) & bentuk (default 5 + custom))
       const addRow = (shouldSave = true, data = {}) => {
         const tr = document.createElement("tr");
         tr.classList.add("bg-white", "hover:bg-gray-50", "form-input");
+        tr.setAttribute("draggable", "true");
+
         tr.innerHTML = `
-                <td class="border border-gray-300 px-2 py-2 text-center row-number font-medium text-gray-600"></td>
-                <td class="border border-gray-300 p-1"><textarea class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2">${data.cp || ""}</textarea></td>
-                <td class="border border-gray-300 p-1"><textarea class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2">${data.tp || ""}</textarea></td>
-                <td class="border border-gray-300 p-1"><textarea class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2">${data.materi || ""}</textarea></td>
-                <td class="border border-gray-300 p-1"><textarea class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2">${data.indikator || ""}</textarea></td>
-                <td class="border border-gray-300 px-3 py-2 text-sm">
-                    ${["Memahami", "Mengaplikasi", "Merefleksi"].map((val) => `<label class="checkbox-label"><input type="checkbox" value="${val}" ${(data.levelKognitif || []).includes(val) ? "checked" : ""}> ${val}</label>`).join("")}
-                </td>
-                <td class="border border-gray-300 px-3 py-2 text-sm">
-                    ${["PG", "PGK", "Menjodohkan", "Isian", "Esai"].map((val) => `<label class="checkbox-label"><input type="checkbox" value="${val}" ${(data.bentukSoal || []).includes(val) ? "checked" : ""}> ${val}</label>`).join("")}
-                </td>
-                <td class="border border-gray-300 p-1"><input type="text" class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2" value="${data.nomorSoal || ""}" /></td>
-                <td class="border border-gray-300 p-1 text-center no-print">
-                    <button class="delete-row-btn bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded-md text-xs">Hapus</button>
-                </td>
-            `;
+          <td class="border border-gray-300 px-2 py-2 text-center row-number font-medium text-gray-600"></td>
+          <td class="border border-gray-300 p-1"><textarea class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2">${data.cp || ""}</textarea></td>
+          <td class="border border-gray-300 p-1"><textarea class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2">${data.tp || ""}</textarea></td>
+          <td class="border border-gray-300 p-1"><textarea class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2">${data.materi || ""}</textarea></td>
+          <td class="border border-gray-300 p-1"><textarea class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2">${data.indikator || ""}</textarea></td>
+          <td class="border border-gray-300 px-3 py-2 text-sm">
+            ${["Memahami", "Mengaplikasi", "Merefleksi", "Access and Retrieve", "Interprete and Integrate", "Evaluate and Reflect"]
+              .map((val) => `<label class="checkbox-label"><input type="checkbox" value="${val}" ${(data.levelKognitif || []).includes(val) ? "checked" : ""}> ${val}</label>`)
+              .join("")}
+          </td>
+          <td class="border border-gray-300 px-3 py-2 text-sm">
+            ${["PG", "PGK", "Menjodohkan", "Isian", "Esai"].map((val) => `<label class="checkbox-label"><input type="checkbox" value="${val}" ${(data.bentukSoal || []).includes(val) ? "checked" : ""}> ${val}</label>`).join("")}
+            <label class="checkbox-label">
+              <input type="checkbox" class="bentuk-custom-checkbox" value="Custom" ${(data.bentukSoal || []).some((s) => s === (data.customSoal || "") || s === "Custom") ? "checked" : ""}>
+              <input type="text" class="bentuk-custom-text border rounded px-1 text-sm w-32" value="${data.customSoal || ""}" placeholder="Lainnya..." />
+            </label>
+          </td>
+          <td class="border border-gray-300 p-1"><input type="text" class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2" value="${data.nomorSoal || ""}" /></td>
+          <td class="border border-gray-300 p-1 text-center no-print space-x-1">
+              <button class="move-up-btn bg-gray-400 hover:bg-gray-500 text-white font-bold py-1 px-2 rounded-md text-xs">↑</button>
+              <button class="move-down-btn bg-gray-400 hover:bg-gray-500 text-white font-bold py-1 px-2 rounded-md text-xs">↓</button>
+              <button class="delete-row-btn bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded-md text-xs">Hapus</button>
+          </td>
+        `;
+
         tableBody.appendChild(tr);
         updateRowNumbers();
         if (shouldSave) debouncedSaveData();
@@ -356,15 +416,93 @@
         });
       };
 
-      const addEventListenersToInputs = () => {
-        document.querySelectorAll(".form-input").forEach((el) => {
-          el.addEventListener("input", debouncedSaveData);
-        });
-      };
+      // Event klik: hapus / up / down
+      document.getElementById("kisiKisiTable").addEventListener("click", function (e) {
+        const row = e.target.closest("tr");
+        if (!row) return;
 
-      // --- AUTENTIKASI & MEMUAT DATA ---
+        if (e.target.classList.contains("delete-row-btn")) {
+          row.remove();
+          updateRowNumbers();
+          debouncedSaveData();
+        }
+
+        if (e.target.classList.contains("move-up-btn")) {
+          const prev = row.previousElementSibling;
+          if (prev) {
+            row.parentNode.insertBefore(row, prev);
+            updateRowNumbers();
+            debouncedSaveData();
+          }
+        }
+
+        if (e.target.classList.contains("move-down-btn")) {
+          const next = row.nextElementSibling;
+          if (next) {
+            row.parentNode.insertBefore(next, row);
+            updateRowNumbers();
+            debouncedSaveData();
+          }
+        }
+      });
+
+      // Delegated input listener (auto-save saat ada perubahan di tabel atau informasi umum)
+      document.addEventListener("input", (e) => {
+        // Simpel: kalau input/textarea ada di dalam container (tabel atau info umum) -> save
+        if (
+          e.target.closest("#tableBody") ||
+          e.target.closest(".form-input") ||
+          ["assessmentType", "academicYear", "kelasSemester", "waktu", "mataPelajaran", "jumlahSoal", "penulis", "kotaTanggal", "namaPenyusun", "nipPenyusun", "namaKepsek", "nipKepsek"].includes(e.target.id)
+        ) {
+          debouncedSaveData();
+        }
+      });
+
+      // Drag & Drop reorder
+      tableBody.addEventListener("dragstart", (e) => {
+        const tr = e.target.closest("tr");
+        if (!tr) return;
+        tr.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+      });
+
+      tableBody.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        const dragging = document.querySelector(".dragging");
+        if (!dragging) return;
+        const afterRow = getDragAfterRow(tableBody, e.clientY);
+        if (afterRow == null) tableBody.appendChild(dragging);
+        else tableBody.insertBefore(dragging, afterRow);
+      });
+
+      tableBody.addEventListener("dragend", () => {
+        const dragging = document.querySelector(".dragging");
+        if (dragging) dragging.classList.remove("dragging");
+        updateRowNumbers();
+        debouncedSaveData();
+      });
+
+      function getDragAfterRow(container, y) {
+        const rows = [...container.querySelectorAll("tr:not(.dragging)")];
+        return rows.reduce(
+          (closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+              return { offset, element: child };
+            } else {
+              return closest;
+            }
+          },
+          { offset: Number.NEGATIVE_INFINITY }
+        ).element;
+      }
+
+      // Tombol tambah
+      document.getElementById("addRowBtn").addEventListener("click", () => addRow(true));
+
+      // Muat kop.png via fetch -> blob -> base64
       (async () => {
-        // Muat kop.png dengan fetch agar pasti jadi base64
         try {
           const response = await fetch("kop.png");
           if (response.ok) {
@@ -372,12 +510,15 @@
             kopImageData = await loadImageData(blob);
             console.log("Kop berhasil dimuat");
           } else {
-            console.warn("kop.png tidak ditemukan, lanjut tanpa kop.");
+            console.warn("kop.png tidak ditemukan (response not ok).");
           }
         } catch (err) {
           console.warn("Gagal memuat kop.png:", err);
         }
+      })();
 
+      // --- AUTENTIKASI & SYNC DENGAN FIRESTORE ---
+      (async () => {
         try {
           if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
             await signInWithCustomToken(auth, __initial_auth_token);
@@ -388,48 +529,26 @@
             if (user) {
               onSnapshot(
                 kisiKisiRef,
-                (doc) => {
-                  if (doc.exists()) {
-                    console.log("Data received from Firestore:", doc.data());
-                    renderData(doc.data());
+                (docSnap) => {
+                  if (docSnap.exists()) {
+                    renderData(docSnap.data());
                   } else {
-                    console.log("Document does not exist. Creating with default data.");
+                    // create with default row
                     renderData(null);
                     saveData();
                   }
                   isDataLoaded = true;
                 },
-                (error) => {
-                  console.error("Error in onSnapshot listener:", error);
-                }
+                (err) => console.error("onSnapshot error:", err)
               );
             }
           });
-        } catch (error) {
-          console.error("Authentication failed:", error);
+        } catch (err) {
+          console.error("Authentication failed:", err);
         }
       })();
 
-      document.getElementById("addRowBtn").addEventListener("click", () => addRow(true));
-
-      document.getElementById("kisiKisiTable").addEventListener("click", function (e) {
-        if (e.target.classList.contains("delete-row-btn")) {
-          e.target.closest("tr").remove();
-          updateRowNumbers();
-          debouncedSaveData();
-        }
-      });
-
-      document.getElementById("penulis").addEventListener("input", (e) => {
-        document.getElementById("namaPenyusun").value = e.target.value;
-      });
-
-      document.getElementById("ttdPenyusunInput").addEventListener("change", (e) => handleFileUpload(e.target.files[0], "penyusun", "ttdPenyusunPreview"));
-      document.getElementById("ttdKepsekInput").addEventListener("change", (e) => handleFileUpload(e.target.files[0], "kepsek", "ttdKepsekPreview"));
-
-      addEventListenersToInputs();
-
-      // --- Fungsi Export ke PDF ---
+      // Export PDF (pakai autoTable seperti sebelumnya)
       const generatePDF = (kopInfo) => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
@@ -476,9 +595,10 @@
         doc.text("Penulis", rightInfoStartX, infoStartY + infoLineHeight * 2);
         doc.text(`: ${document.getElementById("penulis").value}`, rightInfoStartX + 80, infoStartY + infoLineHeight * 2);
 
+        // Table data
         const tableData = [];
         collectData().rows.forEach((row, index) => {
-          tableData.push([index + 1, row.cp, row.tp, row.materi, row.indikator, row.levelKognitif.map((val) => `\u2022 ${val}`).join("\n"), row.bentukSoal.map((val) => `\u2022 ${val}`).join("\n"), row.nomorSoal]);
+          tableData.push([index + 1, row.cp, row.tp, row.materi, row.indikator, row.levelKognitif.map((v) => `\u2022 ${v}`).join("\n"), row.bentukSoal.map((v) => `\u2022 ${v}`).join("\n"), row.nomorSoal]);
         });
 
         doc.autoTable({
@@ -487,17 +607,17 @@
           startY: infoStartY + infoLineHeight * 3 + 10,
           theme: "grid",
           headStyles: { fillColor: [230, 230, 230], textColor: [30, 30, 30], fontStyle: "bold" },
-          styles: { lineWidth: 0.5, lineColor: [150, 150, 150] },
+          styles: { lineWidth: 0.5, lineColor: [150, 150, 150], fontSize: 9 },
           didParseCell: function (data) {
             if (data.section === "head") data.cell.styles.halign = "center";
             if (data.column.index === 0) data.cell.styles.halign = "center";
           },
         });
 
-        // Bagian tanda tangan
+        // Tanda tangan
         const lastPage = doc.internal.getNumberOfPages();
         doc.setPage(lastPage);
-        let finalY = doc.autoTable.previous.finalY;
+        let finalY = doc.autoTable.previous ? doc.autoTable.previous.finalY : 60;
         const pageHeight = doc.internal.pageSize.getHeight();
         const signatureBlockHeight = 130;
 
@@ -539,7 +659,6 @@
         }
 
         let namesY = ttdY + ttdHeight + 10;
-
         const namaPenyusun = document.getElementById("namaPenyusun").value;
         const nipPenyusun = `NIP. ${document.getElementById("nipPenyusun").value}`;
         const namaKepsek = document.getElementById("namaKepsek").value;
