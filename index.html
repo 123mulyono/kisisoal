@@ -1,375 +1,568 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Aplikasi Kisi-Kisi Soal (Simpan Otomatis)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" xintegrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4Ql21EZXXUv3/d/NJAPoPancA9A0iXKZ4doM7eypGJax+yLFEi6sRRT4Sg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" xintegrity="sha512-2/YdOMV+8o4iQo7j+s/Qa3I/d2nL2Uo1s3B/eJ8v/jkeo+Fo12m8Y192tpo2iN2xR/VoPGw4/pP2S1w3Iab6A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      textarea {
+        resize: vertical;
+        min-height: 50px;
+      }
+      @media print {
+        .no-print {
+          display: none;
         }
-        textarea { resize: vertical; min-height: 50px; }
-        @media print { .no-print { display: none; } }
-        .checkbox-label { display: flex; align-items: center; margin-bottom: 4px; }
-        .checkbox-label input { margin-right: 8px; }
-        /* Indikator status penyimpanan */
-        #saveStatus {
-            transition: opacity 0.5s ease-in-out;
-        }
+      }
+      .checkbox-label {
+        display: flex;
+        align-items: center;
+        margin-bottom: 4px;
+      }
+      .checkbox-label input {
+        margin-right: 8px;
+      }
+      #saveStatus {
+        transition: opacity 0.5s ease-in-out;
+      }
     </style>
-</head>
-<body class="bg-gray-100">
-
+  </head>
+  <body class="bg-gray-100">
     <div class="container mx-auto p-4 md:p-8">
-        <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
-            <!-- Bagian Header -->
-            <div class="text-center mb-8">
-                <h1 class="text-2xl font-bold uppercase text-gray-800">Kisi-Kisi Soal</h1>
-                <input id="assessmentType" type="text" class="form-input mt-1 text-center text-lg w-full font-semibold text-gray-700 border-0 border-b-2 border-gray-200 focus:ring-0 focus:border-blue-500 transition" value="Asesmen Sumatif Tengah Semester 1">
-                <input id="academicYear" type="text" class="form-input mt-1 text-center text-lg w-full font-semibold text-gray-700 border-0 border-b-2 border-gray-200 focus:ring-0 focus:border-blue-500 transition" value="Tahun Ajaran 2025/2026">
-            </div>
-            
-            <!-- Informasi Umum -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 mb-8">
-                <div>
-                    <label for="kelasSemester" class="block text-sm font-medium text-gray-600">Kelas/Term/Semester</label>
-                    <input type="text" id="kelasSemester" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Contoh: X / Ganjil">
-                </div>
-                <div>
-                    <label for="waktu" class="block text-sm font-medium text-gray-600">Waktu</label>
-                    <input type="text" id="waktu" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Contoh: 120 Menit">
-                </div>
-                <div>
-                    <label for="mataPelajaran" class="block text-sm font-medium text-gray-600">Mata Pelajaran</label>
-                    <input type="text" id="mataPelajaran" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Contoh: Bahasa Indonesia">
-                </div>
-                <div>
-                    <label for="jumlahSoal" class="block text-sm font-medium text-gray-600">Jumlah Soal</label>
-                    <input type="text" id="jumlahSoal" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Contoh: 25 Pilihan Ganda, 5 Esai">
-                </div>
-                 <div>
-                    <label for="penulis" class="block text-sm font-medium text-gray-600">Penulis</label>
-                    <input type="text" id="penulis" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Nama Guru">
-                </div>
-            </div>
-
-            <!-- Tombol Aksi -->
-            <div class="flex items-center justify-between mb-4 no-print">
-                 <div class="flex items-center space-x-2">
-                     <h2 class="text-xl font-semibold text-gray-800">Isi Kisi-Kisi</h2>
-                     <span id="saveStatus" class="text-sm text-gray-500 opacity-0">Menyimpan...</span>
-                </div>
-                 <div class="flex items-center space-x-2">
-                    <button id="addRowBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
-                        Tambah Baris
-                    </button>
-                    <button id="exportPdfBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">
-                        Export ke PDF
-                    </button>
-                </div>
-            </div>
-
-            <!-- Tabel Kisi-Kisi -->
-            <div class="overflow-x-auto">
-                <table id="kisiKisiTable" class="min-w-full border border-gray-300">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700 w-12">No</th>
-                            <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Capaian Pembelajaran</th>
-                            <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Tujuan Pembelajaran</th>
-                            <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Materi</th>
-                            <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Indikator Soal</th>
-                            <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Level Kognitif</th>
-                            <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Bentuk Soal</th>
-                            <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Nomor Soal</th>
-                            <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700 no-print">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <!-- Rows will be dynamically added here -->
-                    </tbody>
-                </table>
-            </div>
-             <p class="text-xs text-gray-400 mt-4 no-print">
-                ID Dokumen (untuk kolaborasi): <span id="docId" class="font-mono bg-gray-200 px-1 rounded"></span>
-            </p>
+      <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+        <!-- Bagian Header -->
+        <div class="text-center mb-8">
+          <h1 class="text-2xl font-bold uppercase text-gray-800">Kisi-Kisi Soal</h1>
+          <input
+            id="assessmentType"
+            type="text"
+            class="form-input mt-1 text-center text-lg w-full font-semibold text-gray-700 border-0 border-b-2 border-gray-200 focus:ring-0 focus:border-blue-500 transition"
+            value="Asesmen Sumatif Tengah Semester 1"
+          />
+          <input
+            id="academicYear"
+            type="text"
+            class="form-input mt-1 text-center text-lg w-full font-semibold text-gray-700 border-0 border-b-2 border-gray-200 focus:ring-0 focus:border-blue-500 transition"
+            value="Tahun Ajaran 2025/2026"
+          />
         </div>
+
+        <!-- Informasi Umum -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 mb-8">
+          <div>
+            <label for="kelasSemester" class="block text-sm font-medium text-gray-600">Kelas/Term/Semester</label>
+            <input type="text" id="kelasSemester" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Contoh: X / Ganjil" />
+          </div>
+          <div>
+            <label for="waktu" class="block text-sm font-medium text-gray-600">Waktu</label>
+            <input type="text" id="waktu" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Contoh: 120 Menit" />
+          </div>
+          <div>
+            <label for="mataPelajaran" class="block text-sm font-medium text-gray-600">Mata Pelajaran</label>
+            <input type="text" id="mataPelajaran" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Contoh: Bahasa Indonesia" />
+          </div>
+          <div>
+            <label for="jumlahSoal" class="block text-sm font-medium text-gray-600">Jumlah Soal</label>
+            <input type="text" id="jumlahSoal" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Contoh: 25 Pilihan Ganda, 5 Esai" />
+          </div>
+          <div>
+            <label for="penulis" class="block text-sm font-medium text-gray-600">Penulis</label>
+            <input type="text" id="penulis" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Nama Guru" />
+          </div>
+        </div>
+
+        <!-- Tombol Aksi -->
+        <div class="flex items-center justify-between mb-4 no-print">
+          <div class="flex items-center space-x-2">
+            <h2 class="text-xl font-semibold text-gray-800">Isi Kisi-Kisi</h2>
+            <span id="saveStatus" class="text-sm text-gray-500 opacity-0">Menyimpan...</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button id="addRowBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">Tambah Baris</button>
+            <button id="exportPdfBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105">Export ke PDF</button>
+          </div>
+        </div>
+
+        <!-- Tabel Kisi-Kisi -->
+        <div class="overflow-x-auto">
+          <table id="kisiKisiTable" class="min-w-full border border-gray-300">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700 w-12">No</th>
+                <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Capaian Pembelajaran</th>
+                <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Tujuan Pembelajaran</th>
+                <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Materi</th>
+                <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Indikator Soal</th>
+                <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Level Kognitif</th>
+                <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Bentuk Soal</th>
+                <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700">Nomor Soal</th>
+                <th class="border border-gray-300 px-2 py-2 text-sm font-semibold text-gray-700 no-print">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <!-- Rows will be dynamically added here -->
+            </tbody>
+          </table>
+        </div>
+        <p class="text-xs text-gray-400 mt-4 no-print">ID Dokumen (untuk kolaborasi): <span id="docId" class="font-mono bg-gray-200 px-1 rounded"></span></p>
+
+        <!-- Bagian Tanda Tangan -->
+        <div class="mt-8 pt-6 border-t border-gray-200 no-print">
+          <div class="flex items-center justify-center mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 text-center bg-gradient-to-r from-orange-400 to-red-500 text-white py-2 px-6 rounded-lg shadow-md">Data Tanda Tangan</h2>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+            <!-- Kolom Kiri: Kepala Sekolah -->
+            <div>
+              <div class="mb-4">
+                <label for="namaKepsek" class="block text-sm font-medium text-gray-600">Nama Kepala Sekolah</label>
+                <input type="text" id="namaKepsek" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Nama Lengkap Kepala Sekolah" />
+              </div>
+              <div class="mb-4">
+                <label for="nipKepsek" class="block text-sm font-medium text-gray-600">NIP Kepala Sekolah</label>
+                <input type="text" id="nipKepsek" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="NIP/NIK Kepala Sekolah" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-600">Tanda Tangan Kepala Sekolah</label>
+                <button type="button" onclick="document.getElementById('ttdKepsekInput').click()" class="mt-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg text-sm">Unggah TTD</button>
+                <input type="file" id="ttdKepsekInput" class="hidden" accept="image/png, image/jpeg" />
+                <div class="mt-2 border border-dashed border-gray-300 rounded-lg p-2 h-24 w-48 flex items-center justify-center bg-gray-50">
+                  <img id="ttdKepsekPreview" src="" alt="Preview TTD Kepsek" class="max-h-full max-w-full" style="display: none" />
+                </div>
+              </div>
+            </div>
+            <!-- Kolom Kanan: Penyusun -->
+            <div>
+              <div class="mb-4">
+                <label for="kotaTanggal" class="block text-sm font-medium text-gray-600">Kota & Tanggal</label>
+                <input type="text" id="kotaTanggal" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Contoh: Sidoarjo, 10 September 2025" />
+              </div>
+              <div class="mb-4">
+                <label for="namaPenyusun" class="block text-sm font-medium text-gray-600">Nama Penyusun</label>
+                <input type="text" id="namaPenyusun" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Nama Guru Penyusun" />
+              </div>
+              <div class="mb-4">
+                <label for="nipPenyusun" class="block text-sm font-medium text-gray-600">NIP Penyusun</label>
+                <input type="text" id="nipPenyusun" class="form-input mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="NIP/NIK Penyusun" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-600">Tanda Tangan Penyusun</label>
+                <button type="button" onclick="document.getElementById('ttdPenyusunInput').click()" class="mt-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg text-sm">Unggah TTD</button>
+                <input type="file" id="ttdPenyusunInput" class="hidden" accept="image/png, image/jpeg" />
+                <div class="mt-2 border border-dashed border-gray-300 rounded-lg p-2 h-24 w-48 flex items-center justify-center bg-gray-50">
+                  <img id="ttdPenyusunPreview" src="" alt="Preview TTD Penyusun" class="max-h-full max-w-full" style="display: none" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Firebase SDK -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+      import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+      import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- KONFIGURASI FIREBASE ---
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "DEMO_KEY", authDomain: "DEMO.firebaseapp.com", projectId: "DEMO_PROJECT_ID" };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'kisi-kisi-soal-default';
-        const docId = `kisi-kisi-data-${appId}`;
-        document.getElementById('docId').textContent = docId;
+      // --- KONFIGURASI FIREBASE ---
+      const firebaseConfig = typeof __firebase_config !== "undefined" ? JSON.parse(__firebase_config) : { apiKey: "DEMO_KEY", authDomain: "DEMO.firebaseapp.com", projectId: "DEMO_PROJECT_ID" };
+      const appId = typeof __app_id !== "undefined" ? __app_id : "kisi-kisi-soal-default";
+      const docId = `kisi-kisi-data-${appId}`;
+      document.getElementById("docId").textContent = docId;
 
-        // --- INISIALISASI ---
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const kisiKisiRef = doc(db, "kisi-kisi-sheets", docId);
+      // --- INISIALISASI ---
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      const kisiKisiRef = doc(db, "artifacts", appId, "public", "data", "kisi-kisi-sheets", docId);
 
-        const tableBody = document.getElementById('tableBody');
-        const saveStatus = document.getElementById('saveStatus');
+      const tableBody = document.getElementById("tableBody");
+      const saveStatus = document.getElementById("saveStatus");
 
-        let isDataLoaded = false;
-        let debounceTimer;
-        let kopImageBase64 = null; // Variabel untuk menyimpan data gambar kop
+      let isDataLoaded = false;
+      let debounceTimer;
+      let kopImageData = null;
+      let ttdPenyusunData = null;
+      let ttdKepsekData = null;
 
-        // --- MEMUAT GAMBAR KOP SURAT SECARA OTOMATIS ---
-        const loadImageAsBase64 = async (url) => {
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const blob = await response.blob();
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                });
-            } catch (e) {
-                console.error(`Gagal memuat gambar dari ${url}:`, e);
-                return null;
-            }
-        };
-
-        (async () => {
-            kopImageBase64 = await loadImageAsBase64('kop.png');
-            if (kopImageBase64) {
-                console.log("Gambar kop.png berhasil dimuat.");
-            } else {
-                console.warn("File kop.png tidak ditemukan. PDF akan dibuat tanpa kop.");
-                const container = document.querySelector('.container .bg-white');
-                const warningDiv = document.createElement('div');
-                warningDiv.className = 'no-print bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-6 rounded-md shadow';
-                warningDiv.innerHTML = `<p><strong>Peringatan:</strong> File <strong>kop.png</strong> tidak ditemukan. Pastikan file tersebut berada di folder yang sama dengan file HTML ini agar kop surat dapat muncul di PDF.</p>`;
-                container.insertBefore(warningDiv, container.firstChild);
-            }
-        })();
-
-        // --- FUNGSI UTAMA ---
-        const debounce = (func, delay) => {
-            return function(...args) {
-                clearTimeout(debounceTimer);
-                saveStatus.style.opacity = '1';
-                debounceTimer = setTimeout(() => {
-                    func.apply(this, args);
-                    setTimeout(() => saveStatus.style.opacity = '0', 1000);
-                }, delay);
+      // --- Fungsi memuat gambar jadi base64 ---
+      const loadImageData = (source) => {
+        return new Promise((resolve) => {
+          if (source instanceof Blob) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const img = new Image();
+              img.onload = () => resolve({ base64: e.target.result, width: img.width, height: img.height });
+              img.onerror = () => resolve(null);
+              img.src = e.target.result;
             };
-        };
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(source);
+          } else {
+            resolve(null);
+          }
+        });
+      };
 
-        const collectData = () => {
-            const rows = [];
-            tableBody.querySelectorAll('tr').forEach(tr => {
-                const rowData = {
-                    cp: tr.querySelector('td:nth-child(2) textarea').value,
-                    tp: tr.querySelector('td:nth-child(3) textarea').value,
-                    materi: tr.querySelector('td:nth-child(4) textarea').value,
-                    indikator: tr.querySelector('td:nth-child(5) textarea').value,
-                    levelKognitif: Array.from(tr.querySelectorAll('td:nth-child(6) input:checked')).map(cb => cb.value),
-                    bentukSoal: Array.from(tr.querySelectorAll('td:nth-child(7) input:checked')).map(cb => cb.value),
-                    nomorSoal: tr.querySelector('td:nth-child(8) input').value,
-                };
-                rows.push(rowData);
-            });
-            return {
-                assessmentType: document.getElementById('assessmentType').value,
-                academicYear: document.getElementById('academicYear').value,
-                kelasSemester: document.getElementById('kelasSemester').value,
-                waktu: document.getElementById('waktu').value,
-                mataPelajaran: document.getElementById('mataPelajaran').value,
-                jumlahSoal: document.getElementById('jumlahSoal').value,
-                penulis: document.getElementById('penulis').value,
-                rows: rows,
-            };
-        };
-        
-        const saveData = async () => {
-            if (!isDataLoaded) return;
-            const data = collectData();
-            await setDoc(kisiKisiRef, data, { merge: true });
-        };
-        
-        const debouncedSaveData = debounce(saveData, 1000);
+      const handleFileUpload = async (file, target, previewElementId) => {
+        if (!file) return;
+        const imageData = await loadImageData(file);
+        if (imageData) {
+          if (target === "penyusun") ttdPenyusunData = imageData;
+          else if (target === "kepsek") ttdKepsekData = imageData;
 
-        const renderData = (data) => {
-            if (!data) { 
-                if (tableBody.rows.length === 0) addRow(false);
-                return; 
-            }
-            document.getElementById('assessmentType').value = data.assessmentType || 'Asesmen Sumatif Tengah Semester 1';
-            document.getElementById('academicYear').value = data.academicYear || 'Tahun Ajaran 2025/2026';
-            document.getElementById('kelasSemester').value = data.kelasSemester || '';
-            document.getElementById('waktu').value = data.waktu || '';
-            document.getElementById('mataPelajaran').value = data.mataPelajaran || '';
-            document.getElementById('jumlahSoal').value = data.jumlahSoal || '';
-            document.getElementById('penulis').value = data.penulis || '';
-            tableBody.innerHTML = '';
-            if (data.rows && data.rows.length > 0) {
-                data.rows.forEach(rowData => addRow(false, rowData));
-            } else {
-                 addRow(false);
-            }
-            updateRowNumbers();
-            addEventListenersToInputs();
-        };
+          const preview = document.getElementById(previewElementId);
+          preview.src = imageData.base64;
+          preview.style.display = "block";
 
-        const addRow = (shouldSave = true, data = {}) => {
-            const tr = document.createElement('tr');
-            tr.classList.add('bg-white', 'hover:bg-gray-50', 'form-input');
-            tr.innerHTML = `
+          debouncedSaveData();
+        }
+      };
+
+      const debounce = (func, delay) => {
+        return function (...args) {
+          clearTimeout(debounceTimer);
+          saveStatus.style.opacity = "1";
+          debounceTimer = setTimeout(() => {
+            func.apply(this, args);
+            setTimeout(() => (saveStatus.style.opacity = "0"), 1000);
+          }, delay);
+        };
+      };
+
+      const collectData = () => {
+        const rows = [];
+        tableBody.querySelectorAll("tr").forEach((tr) => {
+          const rowData = {
+            cp: tr.querySelector("td:nth-child(2) textarea").value,
+            tp: tr.querySelector("td:nth-child(3) textarea").value,
+            materi: tr.querySelector("td:nth-child(4) textarea").value,
+            indikator: tr.querySelector("td:nth-child(5) textarea").value,
+            levelKognitif: Array.from(tr.querySelectorAll("td:nth-child(6) input:checked")).map((cb) => cb.value),
+            bentukSoal: Array.from(tr.querySelectorAll("td:nth-child(7) input:checked")).map((cb) => cb.value),
+            nomorSoal: tr.querySelector("td:nth-child(8) input").value,
+          };
+          rows.push(rowData);
+        });
+        return {
+          assessmentType: document.getElementById("assessmentType").value,
+          academicYear: document.getElementById("academicYear").value,
+          kelasSemester: document.getElementById("kelasSemester").value,
+          waktu: document.getElementById("waktu").value,
+          mataPelajaran: document.getElementById("mataPelajaran").value,
+          jumlahSoal: document.getElementById("jumlahSoal").value,
+          penulis: document.getElementById("penulis").value,
+          kotaTanggal: document.getElementById("kotaTanggal").value,
+          namaPenyusun: document.getElementById("namaPenyusun").value,
+          nipPenyusun: document.getElementById("nipPenyusun").value,
+          namaKepsek: document.getElementById("namaKepsek").value,
+          nipKepsek: document.getElementById("nipKepsek").value,
+          ttdPenyusun: ttdPenyusunData,
+          ttdKepsek: ttdKepsekData,
+          rows: rows,
+        };
+      };
+
+      const saveData = async () => {
+        if (!auth.currentUser) return;
+        const data = collectData();
+        try {
+          await setDoc(kisiKisiRef, data, { merge: true });
+          console.log("Data saved to Firestore.");
+        } catch (error) {
+          console.error("Error saving data to Firestore:", error);
+        }
+      };
+
+      const debouncedSaveData = debounce(saveData, 1500);
+
+      const renderData = (data) => {
+        const d = data || {};
+        document.getElementById("assessmentType").value = d.assessmentType || "Asesmen Sumatif Tengah Semester 1";
+        document.getElementById("academicYear").value = d.academicYear || "Tahun Ajaran 2025/2026";
+        document.getElementById("kelasSemester").value = d.kelasSemester || "";
+        document.getElementById("waktu").value = d.waktu || "";
+        document.getElementById("mataPelajaran").value = d.mataPelajaran || "";
+        document.getElementById("jumlahSoal").value = d.jumlahSoal || "";
+        document.getElementById("penulis").value = d.penulis || "";
+        document.getElementById("kotaTanggal").value = d.kotaTanggal || "";
+        document.getElementById("namaPenyusun").value = d.namaPenyusun || d.penulis || "";
+        document.getElementById("nipPenyusun").value = d.nipPenyusun || "";
+        document.getElementById("namaKepsek").value = d.namaKepsek || "";
+        document.getElementById("nipKepsek").value = d.nipKepsek || "";
+
+        if (d.ttdPenyusun && d.ttdPenyusun.base64) {
+          ttdPenyusunData = d.ttdPenyusun;
+          const preview = document.getElementById("ttdPenyusunPreview");
+          preview.src = d.ttdPenyusun.base64;
+          preview.style.display = "block";
+        }
+        if (d.ttdKepsek && d.ttdKepsek.base64) {
+          ttdKepsekData = d.ttdKepsek;
+          const preview = document.getElementById("ttdKepsekPreview");
+          preview.src = d.ttdKepsek.base64;
+          preview.style.display = "block";
+        }
+
+        tableBody.innerHTML = "";
+        if (d.rows && d.rows.length > 0) {
+          d.rows.forEach((rowData) => addRow(false, rowData));
+        } else {
+          addRow(false);
+        }
+        updateRowNumbers();
+        addEventListenersToInputs();
+      };
+
+      const addRow = (shouldSave = true, data = {}) => {
+        const tr = document.createElement("tr");
+        tr.classList.add("bg-white", "hover:bg-gray-50", "form-input");
+        tr.innerHTML = `
                 <td class="border border-gray-300 px-2 py-2 text-center row-number font-medium text-gray-600"></td>
-                <td class="border border-gray-300 p-1"><textarea class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2">${data.cp || ''}</textarea></td>
-                <td class="border border-gray-300 p-1"><textarea class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2">${data.tp || ''}</textarea></td>
-                <td class="border border-gray-300 p-1"><textarea class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2">${data.materi || ''}</textarea></td>
-                <td class="border border-gray-300 p-1"><textarea class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2">${data.indikator || ''}</textarea></td>
+                <td class="border border-gray-300 p-1"><textarea class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2">${data.cp || ""}</textarea></td>
+                <td class="border border-gray-300 p-1"><textarea class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2">${data.tp || ""}</textarea></td>
+                <td class="border border-gray-300 p-1"><textarea class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2">${data.materi || ""}</textarea></td>
+                <td class="border border-gray-300 p-1"><textarea class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2">${data.indikator || ""}</textarea></td>
                 <td class="border border-gray-300 px-3 py-2 text-sm">
-                    ${['Memahami', 'Mengaplikasi', 'Merefleksi'].map(val => `<label class="checkbox-label"><input type="checkbox" value="${val}" ${(data.levelKognitif || []).includes(val) ? 'checked' : ''}> ${val}</label>`).join('')}
+                    ${["Memahami", "Mengaplikasi", "Merefleksi"].map((val) => `<label class="checkbox-label"><input type="checkbox" value="${val}" ${(data.levelKognitif || []).includes(val) ? "checked" : ""}> ${val}</label>`).join("")}
                 </td>
                 <td class="border border-gray-300 px-3 py-2 text-sm">
-                    ${['PG', 'PGK', 'Menjodohkan', 'Isian', 'Esai'].map(val => `<label class="checkbox-label"><input type="checkbox" value="${val}" ${(data.bentukSoal || []).includes(val) ? 'checked' : ''}> ${val}</label>`).join('')}
+                    ${["PG", "PGK", "Menjodohkan", "Isian", "Esai"].map((val) => `<label class="checkbox-label"><input type="checkbox" value="${val}" ${(data.bentukSoal || []).includes(val) ? "checked" : ""}> ${val}</label>`).join("")}
                 </td>
-                <td class="border border-gray-300 p-1"><input type="text" class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2" value="${data.nomorSoal || ''}" /></td>
+                <td class="border border-gray-300 p-1"><input type="text" class="w-full border-gray-200 rounded-md shadow-sm text-sm p-2" value="${data.nomorSoal || ""}" /></td>
                 <td class="border border-gray-300 p-1 text-center no-print">
                     <button class="delete-row-btn bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded-md text-xs">Hapus</button>
                 </td>
             `;
-            tableBody.appendChild(tr);
-            updateRowNumbers();
-            if(shouldSave) debouncedSaveData();
-        };
+        tableBody.appendChild(tr);
+        updateRowNumbers();
+        if (shouldSave) debouncedSaveData();
+      };
 
-        const updateRowNumbers = () => {
-            tableBody.querySelectorAll('tr').forEach((row, index) => {
-                row.querySelector('.row-number').textContent = index + 1;
-            });
-        };
+      const updateRowNumbers = () => {
+        tableBody.querySelectorAll("tr").forEach((row, index) => {
+          row.querySelector(".row-number").textContent = index + 1;
+        });
+      };
 
-        const addEventListenersToInputs = () => {
-            document.querySelectorAll('.form-input').forEach(el => {
-                el.addEventListener('input', debouncedSaveData);
-            });
-        };
+      const addEventListenersToInputs = () => {
+        document.querySelectorAll(".form-input").forEach((el) => {
+          el.addEventListener("input", debouncedSaveData);
+        });
+      };
 
-        // --- AUTENTIKASI & MEMUAT DATA ---
-        onAuthStateChanged(auth, user => {
+      // --- AUTENTIKASI & MEMUAT DATA ---
+      (async () => {
+        // Muat kop.png dengan fetch agar pasti jadi base64
+        try {
+          const response = await fetch("kop.png");
+          if (response.ok) {
+            const blob = await response.blob();
+            kopImageData = await loadImageData(blob);
+            console.log("Kop berhasil dimuat");
+          } else {
+            console.warn("kop.png tidak ditemukan, lanjut tanpa kop.");
+          }
+        } catch (err) {
+          console.warn("Gagal memuat kop.png:", err);
+        }
+
+        try {
+          if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
+            await signInWithCustomToken(auth, __initial_auth_token);
+          } else {
+            await signInAnonymously(auth);
+          }
+          onAuthStateChanged(auth, (user) => {
             if (user) {
-                onSnapshot(kisiKisiRef, (doc) => {
+              onSnapshot(
+                kisiKisiRef,
+                (doc) => {
+                  if (doc.exists()) {
                     console.log("Data received from Firestore:", doc.data());
                     renderData(doc.data());
-                    isDataLoaded = true;
-                });
-            }
-        });
-        
-        signInAnonymously(auth)
-            .catch(error => console.error("Anonymous sign-in failed:", error));
-
-        // --- EVENT LISTENERS TOMBOL ---
-        document.getElementById('addRowBtn').addEventListener('click', () => addRow(true));
-        
-        document.getElementById('kisiKisiTable').addEventListener('click', function(e) {
-            if (e.target.classList.contains('delete-row-btn')) {
-                e.target.closest('tr').remove();
-                updateRowNumbers();
-                debouncedSaveData();
-            }
-        });
-        
-        addEventListenersToInputs();
-        
-        const generatePDF = (kopData) => {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-            
-            let currentY = 0;
-
-            if (kopData) {
-                const pageMargin = 40;
-                const img = new Image();
-                img.src = kopData;
-                const pageWidth = doc.internal.pageSize.getWidth();
-                const imgWidth = pageWidth - (pageMargin * 2);
-                const imgHeight = (img.height * imgWidth) / img.width;
-                doc.addImage(kopData, 'PNG', pageMargin, 20, imgWidth, imgHeight);
-                currentY = 20 + imgHeight + 20; // Update Y position after image
-            } else {
-                 currentY = 40;
-            }
-
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.text('KISI-KISI SOAL', doc.internal.pageSize.getWidth() / 2, currentY, { align: 'center' });
-            currentY += 20;
-
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'normal');
-            doc.text(document.getElementById('assessmentType').value.toUpperCase(), doc.internal.pageSize.getWidth() / 2, currentY, { align: 'center' });
-            currentY += 15;
-            doc.text(document.getElementById('academicYear').value.toUpperCase(), doc.internal.pageSize.getWidth() / 2, currentY, { align: 'center' });
-            currentY += 25;
-            
-            const infoStartX = 40, infoLineHeight = 15;
-            let infoStartY = currentY;
-            doc.setFontSize(10);
-            doc.text('Kelas/Term/Semester', infoStartX, infoStartY);
-            doc.text(`: ${document.getElementById('kelasSemester').value}`, infoStartX + 120, infoStartY);
-            doc.text('Mata Pelajaran', infoStartX, infoStartY + infoLineHeight);
-            doc.text(`: ${document.getElementById('mataPelajaran').value}`, infoStartX + 120, infoStartY + infoLineHeight);
-            
-            const rightInfoStartX = doc.internal.pageSize.getWidth() / 2 + 60;
-            doc.text('Waktu', rightInfoStartX, infoStartY);
-            doc.text(`: ${document.getElementById('waktu').value}`, rightInfoStartX + 80, infoStartY);
-            doc.text('Jumlah Soal', rightInfoStartX, infoStartY + infoLineHeight);
-            doc.text(`: ${document.getElementById('jumlahSoal').value}`, rightInfoStartX + 80, infoStartY + infoLineHeight);
-            doc.text('Penulis', rightInfoStartX, infoStartY + (infoLineHeight * 2));
-            doc.text(`: ${document.getElementById('penulis').value}`, rightInfoStartX + 80, infoStartY + (infoLineHeight * 2));
-            
-            const tableData = [];
-            collectData().rows.forEach((row, index) => {
-                tableData.push([
-                    index + 1, row.cp, row.tp, row.materi, row.indikator,
-                    row.levelKognitif.map(val => `\u2022 ${val}`).join('\n'),
-                    row.bentukSoal.map(val => `\u2022 ${val}`).join('\n'),
-                    row.nomorSoal,
-                ]);
-            });
-            
-            doc.autoTable({
-                head: [['No', 'Capaian Pembelajaran', 'Tujuan Pembelajaran', 'Materi', 'Indikator Soal', 'Level Kognitif', 'Bentuk Soal', 'Nomor Soal']],
-                body: tableData,
-                startY: infoStartY + (infoLineHeight * 3) + 10,
-                theme: 'grid',
-                headStyles: { fillColor: [230, 230, 230], textColor: [30, 30, 30], fontStyle: 'bold' },
-                styles: { lineWidth: 0.5, lineColor: [150, 150, 150] },
-                didParseCell: function(data) {
-                    if (data.section === 'head') data.cell.styles.halign = 'center';
-                    if (data.column.index === 0) data.cell.styles.halign = 'center';
+                  } else {
+                    console.log("Document does not exist. Creating with default data.");
+                    renderData(null);
+                    saveData();
+                  }
+                  isDataLoaded = true;
+                },
+                (error) => {
+                  console.error("Error in onSnapshot listener:", error);
                 }
-            });
+              );
+            }
+          });
+        } catch (error) {
+          console.error("Authentication failed:", error);
+        }
+      })();
 
-            doc.save('kisi-kisi-soal.pdf');
-        };
+      document.getElementById("addRowBtn").addEventListener("click", () => addRow(true));
 
-        document.getElementById('exportPdfBtn').addEventListener('click', () => {
-            generatePDF(kopImageBase64);
+      document.getElementById("kisiKisiTable").addEventListener("click", function (e) {
+        if (e.target.classList.contains("delete-row-btn")) {
+          e.target.closest("tr").remove();
+          updateRowNumbers();
+          debouncedSaveData();
+        }
+      });
+
+      document.getElementById("penulis").addEventListener("input", (e) => {
+        document.getElementById("namaPenyusun").value = e.target.value;
+      });
+
+      document.getElementById("ttdPenyusunInput").addEventListener("change", (e) => handleFileUpload(e.target.files[0], "penyusun", "ttdPenyusunPreview"));
+      document.getElementById("ttdKepsekInput").addEventListener("change", (e) => handleFileUpload(e.target.files[0], "kepsek", "ttdKepsekPreview"));
+
+      addEventListenersToInputs();
+
+      // --- Fungsi Export ke PDF ---
+      const generatePDF = (kopInfo) => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+
+        let currentY = 0;
+
+        if (kopInfo) {
+          const pageMargin = 40;
+          const pageWidth = doc.internal.pageSize.getWidth();
+          const imgWidth = pageWidth - pageMargin * 2;
+          const imgHeight = (kopInfo.height * imgWidth) / kopInfo.width;
+          doc.addImage(kopInfo.base64, "PNG", pageMargin, 20, imgWidth, imgHeight);
+          currentY = 20 + imgHeight + 20;
+        } else {
+          currentY = 40;
+        }
+
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text("KISI-KISI SOAL", doc.internal.pageSize.getWidth() / 2, currentY, { align: "center" });
+        currentY += 20;
+
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.text(document.getElementById("assessmentType").value.toUpperCase(), doc.internal.pageSize.getWidth() / 2, currentY, { align: "center" });
+        currentY += 15;
+        doc.text(document.getElementById("academicYear").value.toUpperCase(), doc.internal.pageSize.getWidth() / 2, currentY, { align: "center" });
+        currentY += 25;
+
+        const infoStartX = 40,
+          infoLineHeight = 15;
+        let infoStartY = currentY;
+        doc.setFontSize(10);
+        doc.text("Kelas/Term/Semester", infoStartX, infoStartY);
+        doc.text(`: ${document.getElementById("kelasSemester").value}`, infoStartX + 120, infoStartY);
+        doc.text("Mata Pelajaran", infoStartX, infoStartY + infoLineHeight);
+        doc.text(`: ${document.getElementById("mataPelajaran").value}`, infoStartX + 120, infoStartY + infoLineHeight);
+
+        const rightInfoStartX = doc.internal.pageSize.getWidth() / 2 + 60;
+        doc.text("Waktu", rightInfoStartX, infoStartY);
+        doc.text(`: ${document.getElementById("waktu").value}`, rightInfoStartX + 80, infoStartY);
+        doc.text("Jumlah Soal", rightInfoStartX, infoStartY + infoLineHeight);
+        doc.text(`: ${document.getElementById("jumlahSoal").value}`, rightInfoStartX + 80, infoStartY + infoLineHeight);
+        doc.text("Penulis", rightInfoStartX, infoStartY + infoLineHeight * 2);
+        doc.text(`: ${document.getElementById("penulis").value}`, rightInfoStartX + 80, infoStartY + infoLineHeight * 2);
+
+        const tableData = [];
+        collectData().rows.forEach((row, index) => {
+          tableData.push([index + 1, row.cp, row.tp, row.materi, row.indikator, row.levelKognitif.map((val) => `\u2022 ${val}`).join("\n"), row.bentukSoal.map((val) => `\u2022 ${val}`).join("\n"), row.nomorSoal]);
         });
-    </script>
-</body>
-</html>
 
+        doc.autoTable({
+          head: [["No", "Capaian Pembelajaran", "Tujuan Pembelajaran", "Materi", "Indikator Soal", "Level Kognitif", "Bentuk Soal", "Nomor Soal"]],
+          body: tableData,
+          startY: infoStartY + infoLineHeight * 3 + 10,
+          theme: "grid",
+          headStyles: { fillColor: [230, 230, 230], textColor: [30, 30, 30], fontStyle: "bold" },
+          styles: { lineWidth: 0.5, lineColor: [150, 150, 150] },
+          didParseCell: function (data) {
+            if (data.section === "head") data.cell.styles.halign = "center";
+            if (data.column.index === 0) data.cell.styles.halign = "center";
+          },
+        });
+
+        // Bagian tanda tangan
+        const lastPage = doc.internal.getNumberOfPages();
+        doc.setPage(lastPage);
+        let finalY = doc.autoTable.previous.finalY;
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const signatureBlockHeight = 130;
+
+        if (finalY + signatureBlockHeight > pageHeight - 40) {
+          doc.addPage();
+          finalY = 40;
+        } else {
+          finalY += 30;
+        }
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageMargin = 40;
+        const leftBlockX = pageMargin;
+        const rightBlockX = pageWidth - pageMargin;
+
+        const kotaTanggal = document.getElementById("kotaTanggal").value;
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text(kotaTanggal, rightBlockX, finalY, { align: "right" });
+
+        let signatureStartY = finalY + 30;
+        doc.text("Mengetahui,", leftBlockX, signatureStartY);
+        doc.text("Kepala Sekolah", leftBlockX, signatureStartY + 15);
+        doc.text("Penyusun", rightBlockX, signatureStartY + 15, { align: "right" });
+
+        let ttdY = signatureStartY + 25;
+        const ttdHeight = 50;
+
+        if (ttdKepsekData) {
+          const sigWidth = 60;
+          const sigHeight = (ttdKepsekData.height * sigWidth) / ttdKepsekData.width;
+          doc.addImage(ttdKepsekData.base64, "PNG", leftBlockX, ttdY, sigWidth, sigHeight);
+        }
+        if (ttdPenyusunData) {
+          const sigWidth = 60;
+          const sigHeight = (ttdPenyusunData.height * sigWidth) / ttdPenyusunData.width;
+          const penyusunSigX = rightBlockX - sigWidth;
+          doc.addImage(ttdPenyusunData.base64, "PNG", penyusunSigX, ttdY, sigWidth, sigHeight);
+        }
+
+        let namesY = ttdY + ttdHeight + 10;
+
+        const namaPenyusun = document.getElementById("namaPenyusun").value;
+        const nipPenyusun = `NIP. ${document.getElementById("nipPenyusun").value}`;
+        const namaKepsek = document.getElementById("namaKepsek").value;
+        const nipKepsek = `NIP. ${document.getElementById("nipKepsek").value}`;
+
+        doc.setFont("helvetica", "bold");
+        doc.text(namaKepsek, leftBlockX, namesY);
+        doc.line(leftBlockX, namesY + 2, leftBlockX + doc.getTextWidth(namaKepsek), namesY + 2);
+        doc.text(namaPenyusun, rightBlockX, namesY, { align: "right" });
+        const namaPenyusunWidth = doc.getTextWidth(namaPenyusun);
+        doc.line(rightBlockX - namaPenyusunWidth, namesY + 2, rightBlockX, namesY + 2);
+
+        let nipY = namesY + 15;
+        doc.setFont("helvetica", "normal");
+        doc.text(nipKepsek, leftBlockX, nipY);
+        doc.text(nipPenyusun, rightBlockX, nipY, { align: "right" });
+
+        doc.save("kisi-kisi-soal.pdf");
+      };
+
+      document.getElementById("exportPdfBtn").addEventListener("click", () => {
+        generatePDF(kopImageData);
+      });
+    </script>
+  </body>
+</html>
